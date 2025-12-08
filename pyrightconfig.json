@@ -1,0 +1,5 @@
+{
+  "typeCheckingMode": "basic",
+  "reportPrivateUsage": "none",
+  "exclude": ["**/tests/**"]
+}
