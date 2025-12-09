@@ -1,0 +1,37 @@
+broker:
+  host: localhost
+  port: 1883
+  username: null  # Optional: set to null or omit for no authentication
+  password: null  # Optional: set to null or omit for no authentication
+
+commands:
+  # Desktop notification example
+  # Send JSON array payload: ["Title", "Message"]
+  - topic: "desktop/notify"
+    cmd: notify-send
+    args: ["-t", "4000", "$1", "$2"]
+
+  # Sticky notification (doesn't auto-dismiss)
+  # Send JSON array payload: ["Title", "Message"]
+  - topic: "desktop/notify-sticky"
+    cmd: notify-send
+    args: ["-w", "$1", "$2"]
+
+  # Mute audio
+  # No payload needed (empty array or any value)
+  - topic: "desktop/mute"
+    cmd: wpctl
+    args: ["set-mute", "@DEFAULT_AUDIO_SINK@", "1"]
+
+  # Unmute audio
+  # No payload needed (empty array or any value)
+  - topic: "desktop/unmute"
+    cmd: wpctl
+    args: ["set-mute", "@DEFAULT_AUDIO_SINK@", "0"]
+
+  # Example: Run a custom script with argument from payload
+  # Send JSON array payload: ["argument_value"]
+  # - topic: "desktop/custom-action"
+  #   cmd: /path/to/your/script.sh
+  #   args: ["$1"]
+
