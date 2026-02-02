@@ -10,6 +10,8 @@ commands:
   - topic: "desktop/notify"
     cmd: notify-send
     args: ["-t", "4000", "$1", "$2"]
+    stdout: "desktop/notify-stdout"
+    stderr: "desktop/notify-stderr"
 
   # Sticky notification (doesn't auto-dismiss)
   # Send JSON array payload: ["Title", "Message"]
@@ -28,6 +30,36 @@ commands:
   - topic: "desktop/unmute"
     cmd: wpctl
     args: ["set-mute", "@DEFAULT_AUDIO_SINK@", "0"]
+
+  # Set audio volume
+  # Send JSON array payload: ["50%"] or ["0.5"] (0.0 to 1.0)
+  - topic: "desktop/volume"
+    cmd: wpctl
+    args: ["set-volume", "@DEFAULT_AUDIO_SINK@", "$1"]
+
+  # Shutdown system
+  # No payload needed (empty array or any value)
+  - topic: "desktop/shutdown"
+    cmd: shutdown
+    args: ["-h", "now"]
+
+  # Lock screen
+  # No payload needed (empty array or any value)
+  - topic: "desktop/lock"
+    cmd: cinnamon-screensaver-command
+    args: ["--lock"]
+
+  # Enable/disable night light
+  # Send JSON array payload: ["true"] or ["false"]
+  - topic: "desktop/night-light-enable"
+    cmd: gsettings
+    args: ["set", "org.cinnamon.settings-daemon.plugins.color", "night-light-enabled", "$1"]
+
+  # Set night light temperature
+  # Send JSON array payload: ["4000"] (temperature in Kelvin, typically 2700-6500)
+  - topic: "desktop/night-light-value"
+    cmd: gsettings
+    args: ["set", "org.cinnamon.settings-daemon.plugins.color", "night-light-temperature", "$1"]
 
   # Example: Run a custom script with argument from payload
   # Send JSON array payload: ["argument_value"]

@@ -1,6 +1,6 @@
 # mqtt2cmd
 
-Execute shell commands based on MQTT messages. Subscribe to MQTT topics and automatically run configured commands when messages arrive, with support for argument substitution from JSON payloads.
+Execute commands based on MQTT messages. Subscribe to MQTT topics and automatically run configured commands when messages arrive, with support for argument substitution from JSON payloads.
 
 ## Features
 
@@ -26,8 +26,10 @@ git clone https://github.com/paranoidi/mqtt2cmd.git
 cd mqtt2cmd
 
 # Install dependencies
-make install
-# or: uv sync --all-extras
+uv sync --all-extras
+
+# Install mqtt2cmd
+uv tool install .
 ```
 
 ## Configuration
@@ -93,11 +95,6 @@ Placeholders reference array indices: `$1` = first element, `$2` = second elemen
 ### Run Directly
 
 ```shell
-uv run mqtt2cmd run --config config.yml
-```
-
-Or if installed:
-```shell
 mqtt2cmd run --config config.yml
 ```
 
@@ -106,8 +103,7 @@ mqtt2cmd run --config config.yml
 Generate a systemd user service file:
 
 ```shell
-uv run mqtt2cmd install-service --config config.yml
-# or: mqtt2cmd install-service --config config.yml
+mqtt2cmd install-service --config config.yml
 ```
 
 This creates a service file at `~/.config/systemd/user/mqtt2cmd.service`. Then enable and start it:
@@ -138,6 +134,9 @@ commands:
   - topic: "desktop/notify"
     cmd: notify-send
     args: ["-t", "4000", "$1", "$2"]
+  - topic: "desktop/notify-sticky"
+    cmd: notify-send
+    args: ["-w", "$1", "$2"]
 ```
 
 Publish message:
@@ -147,27 +146,44 @@ mosquitto_pub -h localhost -t "desktop/notify" -m '["Alert", "Something happened
 
 ### Audio Control
 
-Control audio devices:
+Control audio devices with wpctl:
 
 ```yaml
 commands:
   - topic: "desktop/mute"
     cmd: wpctl
     args: ["set-mute", "@DEFAULT_AUDIO_SINK@", "1"]
-  - topic: "desktop/unmute"
+  - topic: "desktop/volume"
     cmd: wpctl
-    args: ["set-mute", "@DEFAULT_AUDIO_SINK@", "0"]
+    args: ["set-volume", "@DEFAULT_AUDIO_SINK@", "$1"]
 ```
 
-### Custom Scripts
+### System Control
 
-Run any shell script or command:
+Control system functions like shutdown and screen lock:
 
 ```yaml
 commands:
-  - topic: "desktop/backup"
-    cmd: /home/user/scripts/backup.sh
-    args: ["$1"]  # Pass first payload element as argument
+  - topic: "desktop/shutdown"
+    cmd: shutdown
+    args: ["-h", "now"]
+  - topic: "desktop/lock"
+    cmd: cinnamon-screensaver-command
+    args: ["--lock"]
+```
+
+### Display Settings
+
+Control display settings like night light:
+
+```yaml
+commands:
+  - topic: "desktop/night-light-enable"
+    cmd: gsettings
+    args: ["set", "org.cinnamon.settings-daemon.plugins.color", "night-light-enabled", "$1"]
+  - topic: "desktop/night-light-value"
+    cmd: gsettings
+    args: ["set", "org.cinnamon.settings-daemon.plugins.color", "night-light-temperature", "$1"]
 ```
 
 ## Development

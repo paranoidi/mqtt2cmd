@@ -145,7 +145,46 @@ class MQTTClient:
             return
 
         logger.info(f"Received message on topic: {topic}")
-        self.executor.execute(command_config, msg.payload)
+        execution_result = self.executor.execute(command_config, msg.payload)
+
+        if self.client:
+            if command_config.stdout:
+                try:
+                    result = self.client.publish(command_config.stdout, execution_result.stdout)
+                    if result.rc == mqtt.MQTT_ERR_SUCCESS:
+                        logger.info(
+                            f"Published stdout to topic {command_config.stdout} "
+                            f"for command on topic {topic}"
+                        )
+                    else:
+                        logger.error(
+                            f"Failed to publish stdout to topic {command_config.stdout}: "
+                            f"MQTT error code {result.rc}"
+                        )
+                except Exception as e:
+                    logger.error(
+                        f"Error publishing stdout to topic {command_config.stdout}: {e}",
+                        exc_info=True,
+                    )
+
+            if command_config.stderr:
+                try:
+                    result = self.client.publish(command_config.stderr, execution_result.stderr)
+                    if result.rc == mqtt.MQTT_ERR_SUCCESS:
+                        logger.info(
+                            f"Published stderr to topic {command_config.stderr} "
+                            f"for command on topic {topic}"
+                        )
+                    else:
+                        logger.error(
+                            f"Failed to publish stderr to topic {command_config.stderr}: "
+                            f"MQTT error code {result.rc}"
+                        )
+                except Exception as e:
+                    logger.error(
+                        f"Error publishing stderr to topic {command_config.stderr}: {e}",
+                        exc_info=True,
+                    )
 
     def _on_disconnect(self, client: mqtt.Client, userdata: object, rc: int) -> None:
         """

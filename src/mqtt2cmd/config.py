@@ -21,6 +21,8 @@ class CommandConfig(BaseModel):
     topic: str
     cmd: str
     args: list[str] = Field(default_factory=list)
+    stdout: str | None = None
+    stderr: str | None = None
 
 
 class AppConfig(BaseModel):
