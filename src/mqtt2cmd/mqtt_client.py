@@ -145,12 +145,33 @@ class MQTTClient:
             return
 
         logger.info(f"Received message on topic: {topic}")
-        execution_result = self.executor.execute(command_config, msg.payload)
+        thread = threading.Thread(
+            target=self._execute_command_async,
+            args=(command_config, msg.payload, topic),
+            daemon=True,
+        )
+        thread.start()
 
-        if self.client:
+    def _execute_command_async(
+        self, command_config: CommandConfig, message_payload: bytes, topic: str
+    ) -> None:
+        """
+        Execute a command asynchronously in a separate thread.
+
+        Args:
+            command_config: Configuration for the command to execute.
+            message_payload: JSON array payload from MQTT message.
+            topic: MQTT topic the message was received on.
+        """
+        execution_result = self.executor.execute(command_config, message_payload)
+
+        with self._lock:
+            client = self.client
+
+        if client:
             if command_config.stdout:
                 try:
-                    result = self.client.publish(command_config.stdout, execution_result.stdout)
+                    result = client.publish(command_config.stdout, execution_result.stdout)
                     if result.rc == mqtt.MQTT_ERR_SUCCESS:
                         logger.info(
                             f"Published stdout to topic {command_config.stdout} "
@@ -169,7 +190,7 @@ class MQTTClient:
 
             if command_config.stderr:
                 try:
-                    result = self.client.publish(command_config.stderr, execution_result.stderr)
+                    result = client.publish(command_config.stderr, execution_result.stderr)
                     if result.rc == mqtt.MQTT_ERR_SUCCESS:
                         logger.info(
                             f"Published stderr to topic {command_config.stderr} "

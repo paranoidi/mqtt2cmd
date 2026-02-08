@@ -64,6 +64,8 @@ commands:
   - `topic` (required): MQTT topic to subscribe to
   - `cmd` (required): Command to execute
   - `args` (optional): List of command arguments
+  - `stdout` (optional): MQTT topic to publish command stdout output to
+  - `stderr` (optional): MQTT topic to publish command stderr output to
 
 ### Argument Substitution
 
@@ -89,6 +91,26 @@ notify-send -t 4000 "Hello" "This is a notification"
 ```
 
 Placeholders reference array indices: `$1` = first element, `$2` = second element, etc.
+
+### Output Publishing
+
+You can configure `stdout` and `stderr` options to publish command output to MQTT topics. This allows you to monitor command execution results via MQTT.
+
+**Example:**
+
+```yaml
+commands:
+  - topic: "desktop/notify"
+    cmd: notify-send
+    args: ["-t", "4000", "$1", "$2"]
+    stdout: "desktop/notify-stdout"
+    stderr: "desktop/notify-stderr"
+```
+
+When a command executes, its stdout and stderr output will be published to the specified topics (if configured). This is useful for:
+- Monitoring command execution results
+- Debugging command failures
+- Integrating command output with other MQTT-based systems
 
 ## Usage
 
